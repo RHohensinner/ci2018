@@ -2,6 +2,8 @@ from sklearn.metrics import confusion_matrix, mean_squared_error
 
 from sklearn.neural_network.multilayer_perceptron import MLPClassifier
 from nn_classification_plot import plot_hidden_layer_weights, plot_histogram_of_acc
+
+from sklearn.model_selection import train_test_split
 import numpy as np
 
 __author__ = 'bellec,subramoney'

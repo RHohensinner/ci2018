@@ -167,10 +167,10 @@ def ex_1_1_c(x_train, x_test, y_train, y_test):
 
     m = 0
     n = 0
+
     # declaring variables used in MLP-Regressor
     hidden_layers  = np.array([1, 2, 3, 4, 6, 8, 12, 20, 40])
     random_state = 10
-
     activation_mode = 'logistic'
     solver_mode = 'lbfgs'
     alpha = 0
@@ -183,7 +183,7 @@ def ex_1_1_c(x_train, x_test, y_train, y_test):
     for m in range(random_state):
         for n in range(hidden_layers.size):
             nn = MLPRegressor(hidden_layer_sizes = (hidden_layers[n],), activation = activation_mode, solver = solver_mode, 
-                              alpha = alpha, max_iter = max_iter, random_state = m, tol = tol)
+                              alpha = alpha, max_iter = 10000, random_state = m, tol = tol)
             nn.fit(x_train, y_train)
             #calculate for every random seed train_mse and test_mse
             train_mse[n][m] = calculate_mse(nn, x_train, y_train)
@@ -194,8 +194,7 @@ def ex_1_1_c(x_train, x_test, y_train, y_test):
     y_test_pred = nn.predict(x_test)
     y_train_pred = nn.predict(x_train)
 
-    plot_learned_function(n_hidden = 40, x_train = x_train, y_train = y_train,
-    					  y_pred_train = y_train_pred, y_pred_test = y_test_pred, x_test = x_test, y_test = y_test)
+    plot_learned_function(40, x_train, y_train, y_train_pred, x_test, y_test, y_test_pred)
 
     pass
 
@@ -217,7 +216,6 @@ def ex_1_1_d(x_train, x_test, y_train, y_test):
     n = 0
     # declaring variables used in MLP-Regressor
     hidden_layers  = np.array([2, 8, 40])
-    random_state = 10
 
     activation_mode = 'logistic'
     solver_mode = 'lbfgs'
@@ -228,9 +226,9 @@ def ex_1_1_d(x_train, x_test, y_train, y_test):
     train_mse = np.zeros((hidden_layers.size, max_iter))
     test_mse = np.zeros((hidden_layers.size, max_iter))
 
-    for m in range(3):
+    for m in range(hidden_layers.size):
         nn = MLPRegressor(hidden_layer_sizes = (hidden_layers[m],), activation = activation_mode, solver = solver_mode, 
-                              alpha = alpha, max_iter = 1, random_state = m, tol = 1e-8)
+                          warm_start = True, alpha = alpha , max_iter = 1)
         for n in range(max_iter):
             nn.fit(x_train, y_train)
             # calculate for every random seed train_mse and test_mse
@@ -261,7 +259,9 @@ def ex_1_2_a(x_train, x_test, y_train, y_test):
     alpha = np.array([10**(-8), 10**(-7), 10**(-6), 10**(-5), 10**(-4), 10**(-3), 10**(-2), 10**(-1), 1, 10, 100])
     random_state = 10
     activation_mode = 'logistic'
-    solver_mode = 'lbfgs'
+    #solver_mode = 'lbfgs'
+    #solver_mode = 'adam'
+    solver_mode = 'sgd'
     max_iter = 200
     train_mse = np.zeros((alpha.size, random_state))
     test_mse = np.zeros((alpha.size, random_state))

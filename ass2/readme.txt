@@ -4,14 +4,14 @@
 		a) Learned function 				DONE
 		b) Variability.. 				DONE
 		c) Varying the number				semi (plot not as intended)
-		d) Variations of MSE				semi (plot not as intended)
+		d) Variations of MSE				DONE
 
 		Documentation: 					TODO
 
 	.2) Regularized Neural Networks:
 		a) Weight Decay					DONE
 		b) Early Stopping				done (does what is is supposed to do, SOMETIMES!
-								      3 plots out of ~50 were valid)
+								      3 plots out of ~50 were useful)
 		c) Combining the tricks				TODO
 
 		Documentation:					TODO
