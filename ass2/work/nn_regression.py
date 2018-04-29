@@ -336,7 +336,7 @@ def ex_1_2_b(x_train, x_test, y_train, y_test):
 
     for m in range(random_state):
         nn = MLPRegressor(hidden_layer_sizes = (hidden_layers,), activation = activation_mode, solver = solver_mode, 
-                          alpha = alpha, warm_start = True, max_iter = max_iter, random_state = m)
+                          alpha = alpha, warm_start = True, max_iter = 20, random_state = m)
         for n in range(max_iter):
 
             # monitor the error every 20 iterations
