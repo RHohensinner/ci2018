@@ -3,7 +3,7 @@
 	.1) Simple Regression with Neural Networks:
 		a) Learned function 				DONE
 		b) Variability.. 				DONE
-		c) Varying the number				semi (plot not as intended)
+		c) Varying the number				DONE
 		d) Variations of MSE				DONE
 
 		Documentation: 					TODO
