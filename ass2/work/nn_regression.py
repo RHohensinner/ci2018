@@ -303,34 +303,39 @@ def ex_1_2_b(x_train, x_test, y_train, y_test):
     solver_mode = 'lbfgs'
     max_iter = 2000
 
+    #declare helpful variables
+    half_max_iter = (max_iter // 20)
+    half_x_train = (x_train.size // 2)
+    half_y_train = (y_train.size // 2)
+
     # declaring arrays to save the last iteration, the validation minimum and the test minimum
     err_last_iter = []
     err_valid_min = []
     err_test_min = []
 
     # same for test/train/valid mse
-    test_mse = np.zeros((max_iter // 20, random_state))
-    train_mse = np.zeros((max_iter // 20, random_state))
-    valid_mse = np.zeros((max_iter // 20, random_state))
+    test_mse = np.zeros((half_max_iter, random_state))
+    train_mse = np.zeros((half_max_iter, random_state))
+    valid_mse = np.zeros((half_max_iter, random_state))
 
     # calculating the permutation
     permutation = np.random.permutation(x_train.size)
 
     # declaring new matrices for training and validation
-    x_training_new = np.zeros((x_train.size // 2, 1))
-    y_training_new = np.zeros(x_train.size // 2)
+    x_training_new = np.zeros((half_x_train, 1))
+    y_training_new = np.zeros(half_x_train)
 
-    x_validation_new = np.zeros((x_train.size // 2, 1))
-    y_validation_new = np.zeros(x_train.size // 2)
+    x_validation_new = np.zeros((half_x_train, 1))
+    y_validation_new = np.zeros(half_x_train)
 
 
     # fill the new training and validation set using the permutation defined above
-    for m in range(x_train.size // 2):
+    for m in range(half_x_train):
         x_training_new[m] = x_train[permutation[m]]
         y_training_new[m] = y_train[permutation[m]]
 
-        x_validation_new[m] = x_train[permutation[m + (x_train.size // 2)]]
-        y_validation_new[m] = y_train[permutation[m + (y_train.size // 2)]]
+        x_validation_new[m] = x_train[permutation[m + (half_x_train)]]
+        y_validation_new[m] = y_train[permutation[m + (half_y_train)]]
 
     m = 0    
 

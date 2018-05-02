@@ -15,7 +15,7 @@ __author__ = 'bellec,subramoney'
 IMAGE_DIM = (32, 30)
 
 
-def plot_random_images(inp, n_images=3):
+def plot_random_images(inp, n_images=10):
     """
     Picks some random images from the dataset passed in (default 3) and plots them as an image
     :param inp: The input1 or input2 array from the dataset. Each row has 960 values
