@@ -27,7 +27,6 @@ def calculate_mse(nn, x, y):
     :param y: The targets
     :return: Training MSE, Testing MSE
     """
-    ## TODO
 
     y_true = y
     y_pred = nn.predict(x)
@@ -82,13 +81,10 @@ def ex_1_1_a(x_train, x_test, y_train, y_test):
     y_train_pred_40 = nn_40.predict(x_train)
 
     # plotting learned function
-    plot_learned_function(n_hidden = hidden_layer_2, x_train = x_train, y_train = y_train,
-    					  y_pred_train = y_train_pred_2, y_pred_test = y_test_pred_2, x_test = x_test, y_test = y_test)
-    plot_learned_function(n_hidden = hidden_layer_8, x_train = x_train, y_train = y_train,
-    					  y_pred_train = y_train_pred_8, y_pred_test = y_test_pred_8, x_test = x_test, y_test = y_test)
-    plot_learned_function(n_hidden = hidden_layer_40, x_train = x_train, y_train = y_train,
-    					  y_pred_train = y_train_pred_40, y_pred_test = y_test_pred_40, x_test = x_test, y_test = y_test)
-
+    #def plot_learned_function(n_hidden, x_train, y_train, y_pred_train, x_test, y_test, y_pred_test):
+    plot_learned_function(hidden_layer_2, x_train, y_train, y_train_pred_2, x_test, y_test, y_test_pred_2)
+    plot_learned_function(hidden_layer_8, x_train, y_train, y_train_pred_8, x_test, y_test, y_test_pred_8)
+    plot_learned_function(hidden_layer_40, x_train, y_train, y_train_pred_40, x_test, y_test, y_test_pred_40)
  	
     pass
 
@@ -174,7 +170,7 @@ def ex_1_1_c(x_train, x_test, y_train, y_test):
     activation_mode = 'logistic'
     solver_mode = 'lbfgs'
     alpha = 0
-    max_iter = 1000
+    max_iter = 10000
     tol = 1e-8
 
     train_mse = np.zeros((hidden_layers.size, random_state))
@@ -252,7 +248,6 @@ def ex_1_2_a(x_train, x_test, y_train, y_test):
     :param y_test: The testing targets
     :return:
     """
-    ## TODO
     m = 0
     n = 0
 
@@ -291,7 +286,7 @@ def ex_1_2_b(x_train, x_test, y_train, y_test):
     :param y_test: The testing targets
     :return:
     """
-    ## TODO
+    
     m = 0
     n = 0
 

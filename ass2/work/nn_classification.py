@@ -27,7 +27,7 @@ def ex_2_1(input2, target2):
     :param target2: The target from dataset2
     :return:
     """
-    ## TODO
+    
     #declaring variables used for MLPClassifier
     hidden_layers = 6
     solver_mode = 'adam'
@@ -59,7 +59,7 @@ def ex_2_2(input1, target1, input2, target2):
     :param target2: The target from dataset2
     :return:
     """
-    ## TODO
+    
     #declaring variables used for MLPClassifier
     hidden_layers = 20
     solver_mode = 'adam'
@@ -85,7 +85,7 @@ def ex_2_2(input1, target1, input2, target2):
 
         test_accuracy.append(current_test_accuracy)
 
-        #plot_histogram_of_acc(train_accuracy[m], test_accuracy[m])
+        plot_histogram_of_acc(train_accuracy[m], test_accuracy[m])
 
         if current_test_accuracy > max_accuracy:
         	cfn = confusion_matrix(target2[:,0], cf.predict(input2))
