@@ -122,8 +122,8 @@ def ex_1_1_b(x_train, x_test, y_train, y_test):
     					  solver = solver_mode, alpha = alpha, max_iter = max_iter, random_state = m)
     	nn.fit(x_train, y_train)
     	#calculate for every random seed train_mse and test_mse
-    	train_mse[i] = calculate_mse(nn, x_train, y_train)
-    	test_mse[i] = calculate_mse(nn, x_test, y_test)
+    	train_mse[m] = calculate_mse(nn, x_train, y_train)
+    	test_mse[m] = calculate_mse(nn, x_test, y_test)
 
     #calculate mse test/train min/max/mean/stdd using argmin/argmax/mean/std
     min_test_mse = min(test_mse)
