@@ -1,0 +1,2 @@
+top degree:  9
+top score:  0.9575
