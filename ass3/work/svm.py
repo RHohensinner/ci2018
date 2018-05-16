@@ -286,7 +286,7 @@ def ex_3_a(x_train, y_train, x_test, y_test):
     kernel_mode_rbf = 'rbf'
     df_shape = 'ovr'
     #gammas = np.arange(0.00001, 100000, 20000)
-    gammas = np.array([10**(-5), 10**(-4), 10**(-3), 10**(-2), 10**(-1), 10**(0), 10**(1), 10**(2), 10**(3), 10**(4), 10**(5)])
+    gammas = [10**(-5), 10**(-4), 10**(-3), 10**(-2), 10**(-1), 10**(0), 10**(1), 10**(2), 10**(3), 10**(4), 10**(5)]
     #gammas2 = np.linspace(10**(-5), 10**(5), 10)
 
     # init linear svm and train
@@ -322,7 +322,7 @@ def ex_3_a(x_train, y_train, x_test, y_test):
         rbf_trainscore.append(temp_train)
         rbf_testscore.append(temp_test)
 
-    plot_score_vs_gamma(rbf_trainscore, rbf_testscore, gammas, lin_trainscore, lin_testscore)    
+    plot_score_vs_gamma(rbf_trainscore, rbf_testscore, gammas, lin_trainscore, lin_testscore, 0.2)    
 
 def ex_3_b(x_train, y_train, x_test, y_test):
     """
