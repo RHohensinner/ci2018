@@ -90,7 +90,7 @@ def ex_1_c(x, y):
     Cs = [1e6, 1, 0.1, 0.001]
 
     # adding point (4, 0) with label 1
-    x_new = np.vstack((x, [4, 0]))
+    x_new = np.vstack((x, [4, -4]))
     y_new = np.hstack((y, 1))
 
     # for loop over all Cs values
@@ -285,7 +285,7 @@ def ex_3_a(x_train, y_train, x_test, y_test):
     kernel_mode_lin = 'linear'
     kernel_mode_rbf = 'rbf'
     df_shape = 'ovr'
-    #gammas = np.arange(0.00001, 100000, 20000)
+    #gammas = np.arange(10**(-5), 10**(5), 20000)
     gammas = [10**(-5), 10**(-4), 10**(-3), 10**(-2), 10**(-1), 10**(0), 10**(1), 10**(2), 10**(3), 10**(4), 10**(5)]
     #gammas2 = np.linspace(10**(-5), 10**(5), 10)
 
@@ -297,7 +297,7 @@ def ex_3_a(x_train, y_train, x_test, y_test):
     lin_trainscore = lin_svm.score(x_train, y_train)
     lin_testscore = lin_svm.score(x_test, y_test)
 
-    #print("LINEAR: \n", "trainscore: ", lin_trainscore, "testscore: ", lin_testscore)
+    print("LINEAR: \n", "trainscore: ", lin_trainscore, "testscore: ", lin_testscore)
 
     # init rbf svm and train it looping over gammas
 
@@ -322,7 +322,9 @@ def ex_3_a(x_train, y_train, x_test, y_test):
         rbf_trainscore.append(temp_train)
         rbf_testscore.append(temp_test)
 
-    plot_score_vs_gamma(rbf_trainscore, rbf_testscore, gammas, lin_trainscore, lin_testscore, 0.2)    
+    print("RBF: \n", "trainscore: ",max(rbf_trainscore), "testscore: ", max(rbf_testscore))
+
+    plot_score_vs_gamma(rbf_trainscore, rbf_testscore, gammas, lin_trainscore, lin_testscore, 0.2)
 
 def ex_3_b(x_train, y_train, x_test, y_test):
     """
@@ -354,6 +356,7 @@ def ex_3_b(x_train, y_train, x_test, y_test):
     # pred y to plot conf matrix
     y_pred= lin_svm.predict(x_test)
     cm = confusion_matrix(y_test, y_pred)
+    print(cm)
     plot_confusion_matrix(cm, lin_svm.classes_)
 
     # helper variables

@@ -60,7 +60,7 @@ def ex_3():
     x_train, y_train, x_test, y_test = \
         data['X'] / 255, data['Y'].ravel(), data['XT'] / 255, data['YT'].ravel()
 
-    plot_mnist(x_train, y_train)
+    #plot_mnist(x_train, y_train)
 
     ex_3_a(x_train, y_train, x_test, y_test)
     ex_3_b(x_train, y_train, x_test, y_test)
