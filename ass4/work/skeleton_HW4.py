@@ -165,7 +165,7 @@ def least_squares_GN(p_anchor, p_start, r, max_iter, tol):
     for i in range(max_iter):
         j_mat = jacobi(current_p, p_anchor)
         prev_p = current_p
-        current_p = np.subtract(current_p, np.dot(np.dot(np.linalg.inv(np.dot(jacobi.T, jacobi)), jacobi.T), np.subtract(r, calculate_anchor_distances(current_p[0], p_anchor))))
+        current_p = np.subtract(current_p, np.dot(np.dot(np.linalg.inv(np.dot(j_mat.T, j_mat)), j_mat.T), np.subtract(r, calculate_anchor_distances(current_p[0], p_anchor))))
         change = np.subtract(current_p, prev_p)[0]
         exit_condition = math.sqrt(math.pow(change[0], 2) + math.pow(change[1], 2))
         if (exit_condition < tol):
