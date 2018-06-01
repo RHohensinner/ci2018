@@ -17,8 +17,8 @@ from scipy.stats import multivariate_normal
 def main():
     
     # choose the scenario
-    scenario = 1    # all anchors are Gaussian
-#    scenario = 2    # 1 anchor is exponential, 3 are Gaussian
+#    scenario = 1    # all anchors are Gaussian
+    scenario = 2    # 1 anchor is exponential, 3 are Gaussian
 #    scenario = 3    # all anchors are exponential
     
     # specify position of anchors
@@ -30,7 +30,8 @@ def main():
     # true position of the agent (has to be estimated)
     p_true = np.array([[2,-4]])
 #    p_true = np.array([[2,-4])
-                       
+     
+    #show init state:                   
     #plot_anchors_and_agent(nr_anchors, p_anchor, p_true, p_ref)
     
     # load measured data and reference measurements for the chosen scenario
@@ -41,33 +42,32 @@ def main():
     nr_samples = np.size(data,0)
     
     #1) ML estimation of model parameters
-    #TODO 
-    
-    params = parameter_estimation(reference_measurement,nr_anchors,p_anchor,p_ref,p_true,data)
+    # DONE
+    params = parameter_estimation(reference_measurement, nr_anchors, p_anchor, p_ref, p_true, data, scenario)
     
     #2) Position estimation using least squares
-    #TODO
-    position_estimation_least_squares(data,nr_anchors,p_anchor, p_true, True)
+    # DONE
+    position_estimation_least_squares(data, nr_anchors, p_anchor, p_true, True, scenario)
 
     if(scenario == 3):
         # TODO: don't forget to plot joint-likelihood function for the first measurement
 
         #3) Postion estimation using numerical maximum likelihood
-        #TODO
-        position_estimation_numerical_ml(data,nr_anchors,p_anchor, params, p_true)
+        # TODO
+        position_estimation_numerical_ml(data, nr_anchors, p_anchor, params, p_true)
     
         #4) Position estimation with prior knowledge (we roughly know where to expect the agent)
-        #TODO
+        # TODO
         # specify the prior distribution
         prior_mean = p_true
         prior_cov = np.eye(2)
-        position_estimation_bayes(data,nr_anchors,p_anchor,prior_mean,prior_cov, params, p_true)
+        position_estimation_bayes(data, nr_anchors, p_anchor, prior_mean, prior_cov, params, p_true)
 
     pass
 
 #--------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------
-def parameter_estimation(reference_measurement,nr_anchors,p_anchor,p_ref,p_true,data):
+def parameter_estimation(reference_measurement, nr_anchors, p_anchor, p_ref, p_true,data, scenario):
     """ estimate the model parameters for all 4 anchors based on the reference measurements, i.e., for anchor i consider reference_measurement[:,i]
     Input:
         reference_measurement... nr_measurements x nr_anchors
@@ -79,38 +79,42 @@ def parameter_estimation(reference_measurement,nr_anchors,p_anchor,p_ref,p_true,
     #TODO (1) check whether a given anchor is Gaussian or exponential
     
     # check visually if anchor's are Gaussian or Exponential
-#    find_out_exp_distr(reference_measurement)
-  
+    if(scenario == 2):
+        find_out_exp_distr(reference_measurement)
 
 
 
     #TODO (2) estimate the according parameter based
 
+    # calc sigmas/lamdas
     sigmas = calc_sigma_squared(data, p_anchor, p_true[0])
     lamdas = calc_lambda(data, p_anchor, p_true[0])
 
-    print("Scenario 1: Sigmas - ", sigmas)
-    params[0][0] = sigmas[0]
-    params[0][1] = sigmas[1]
-    params[0][2] = sigmas[2]
-    params[0][3] = sigmas[3]
+    if(scenario == 1):
+        print("Scenario 1: Sigmas - ", sigmas)
+        params[0][0] = sigmas[0]
+        params[0][1] = sigmas[1]
+        params[0][2] = sigmas[2]
+        params[0][3] = sigmas[3]
 
-#    print("Scenario 2: Lamda -", lamdas[0])
-#    print("Scenario 2: Sigmas -", sigmas[1], sigmas[2], sigmas[3])
-#    params[0][0] = lamdas[0]
-#    params[0][1] = sigmas[1]
-#    params[0][2] = sigmas[2]
-#    params[0][3] = sigmas[3]
+    elif(scenario == 2):
+        print("Scenario 2: Lamda -", lamdas[0])
+        print("Scenario 2: Sigmas -", sigmas[1], sigmas[2], sigmas[3])
+        params[0][0] = lamdas[0]
+        params[0][1] = sigmas[1]
+        params[0][2] = sigmas[2]
+        params[0][3] = sigmas[3]
 
-#    print("Scenario 3: Lamda - ", lamdas)
-#    params[0][0] = lamdas[0]
-#    params[0][1] = lamdas[1]
-#    params[0][2] = lamdas[2]
-#    params[0][3] = lamdas[3]
+    elif(scenario == 3):
+        print("Scenario 3: Lamda - ", lamdas)
+        params[0][0] = lamdas[0]
+        params[0][1] = lamdas[1]
+        params[0][2] = lamdas[2]
+        params[0][3] = lamdas[3]
 
     return params
 #--------------------------------------------------------------------------------
-def position_estimation_least_squares(data,nr_anchors,p_anchor, p_true, use_exponential):
+def position_estimation_least_squares(data, nr_anchors, p_anchor, p_true, use_exponential, scenario):
     """estimate the position by using the least squares approximation. 
     Input:
         data...distance measurements to unkown agent, nr_measurements x nr_anchors
@@ -119,15 +123,85 @@ def position_estimation_least_squares(data,nr_anchors,p_anchor, p_true, use_expo
         p_true... true position (needed to calculate error) 2x2 
         use_exponential... determines if the exponential anchor in scenario 2 is used, bool"""
     nr_samples = np.size(data,0)
+    p_est = np.zeros((nr_samples, 2))
+    err_measures = np.zeros(nr_samples)
     
     #TODO set parameters
     #tol = ...  # tolerance
     #max_iter = ...  # maximum iterations for GN
+    tol = 10e-5
+    max_iter = 50
     
+    
+    if(scenario == 1):
+        title = "Scenario 1: Gauss"
+        print(title)
+    
+    elif(scenario == 2):
+        title = "Scenario 2: Gauss and Exponential"
+        print(title)
+
+    elif(scenario == 3):
+        title = "Scenario 3: Exponential"
+        print(title)
+
+
+
     # TODO estimate position for  i in range(0, nr_samples)
-    # least_squares_GN(p_anchor,p_start, r, max_iter, tol)
-	# TODO calculate error measures and create plots----------------
-    pass
+
+    for i in range(0, nr_samples):
+        r = data[i]
+        p_start = -5.0 + 10.0 * np.random.rand(1, 2)
+        p_est[i] = least_squares_GN(p_anchor, p_start, r, max_iter, tol)
+
+	# TODO calculate error measures and create plots
+
+    for i in range(0, nr_samples):
+        diff = np.subtract(p_est[i], p_true)[0]
+        err_measures[i] = mt.sqrt(mt.pow(diff[0], 2) + mt.pow(diff[1], 2))
+
+    # printing mean error and variance
+    print("Mean: ", np.mean(err_measures), "Variance: ", np.var(err_measures))
+
+    # split x,y estimated and calculate their mean vector and covariance matrix
+    x_est = p_est[:, 0]
+    y_est  = p_est[:, 1]
+
+    x_mean = np.mean(x_est)
+    y_mean = np.mean(y_est)
+
+    mean_vector = [x_mean, y_mean]
+
+    cov_mat = np.cov(x_est, y_est)
+
+    # Scatter plots of estimated positions:
+    plt.axis([-6, 6, -6, 6])
+    for i in range(0, 4):
+        plt.plot(p_anchor[i, 0], p_anchor[i, 1], 'bo')
+        plt.text(p_anchor[i, 0] + 0.2, p_anchor[i, 1] + 0.2, r'$p_{a,' + str(i) + '}$')
+    plt.plot(p_true[0, 0], p_true[0, 1], 'r*')
+    plt.text(p_true[0, 0] + 0.2, p_true[0, 1] + 0.2, r'$p_{true}$')
+    plt.xlabel("x/m")
+    plt.ylabel("y/m")
+    plt.scatter(x_est, y_est)
+
+    # setting up vars for plotGaussianContour
+    min_x = min(x_est)
+    max_x = max(x_est)
+    min_y = min(y_est)
+    max_y = max(y_est)
+
+    # plotting gaussian contour
+    plot_gauss_contour(mean_vector, cov_mat, min_x, max_x, min_y, max_y, title)
+
+    # cumulative distribution function
+    Fx, x = ecdf(err_measures)
+    plt.plot(x, Fx)
+    plt.title("CDF - Scenario " + str(scenario))
+    plt.xlabel("position of est_errors")
+    plt.ylabel("P(est_errors)")
+    plt.show()
+
 #--------------------------------------------------------------------------------
 def position_estimation_numerical_ml(data,nr_anchors,p_anchor, lambdas, p_true):
     """ estimate the position by using a numerical maximum likelihood estimator
@@ -161,16 +235,32 @@ def least_squares_GN(p_anchor, p_start, r, max_iter, tol):
         r... distance_estimate, nr_anchors x 1
         max_iter... maximum number of iterations, scalar
         tol... tolerance value to terminate, scalar"""
-    p_actual = p_start
+
+    # helper vars:    
+    p_temp = p_start
+    p_old = 0
+    brk_cond = 0
+    diff = 0
+
+
     for i in range(max_iter):
-        j_mat = jacobi(current_p, p_anchor)
-        prev_p = current_p
-        current_p = np.subtract(current_p, np.dot(np.dot(np.linalg.inv(np.dot(j_mat.T, j_mat)), j_mat.T), np.subtract(r, calculate_anchor_distances(current_p[0], p_anchor))))
-        change = np.subtract(current_p, prev_p)[0]
-        exit_condition = math.sqrt(math.pow(change[0], 2) + math.pow(change[1], 2))
-        if (exit_condition < tol):
+        # creating jacobi matrix
+        j_mat = calc_jacobi(p_temp, p_anchor)
+
+        #updating p_old and calc new temp
+        p_old = p_temp
+        anchor_dists = calc_anchor_dist(p_temp[0], p_anchor)
+        p_temp = np.subtract(p_temp, np.dot(np.dot(np.linalg.inv(np.dot(j_mat.T, j_mat)), j_mat.T), np.subtract(r, anchor_dists)))
+        
+        # calc diff and break condition
+        diff = np.subtract(p_temp, p_old)[0]
+        brk_cond = mt.sqrt(mt.pow(diff[0], 2) + mt.pow(diff[1], 2))
+
+        # if brk_cond is smaller than tol break and return p_temp
+        if (brk_cond < tol):
             break;
-    return current_p;
+
+    return p_temp;
 
     
 #--------------------------------------------------------------------------------
@@ -222,15 +312,25 @@ def calc_lambda(data, p_anchor, p_true):
     return lamdas
 
 #--------------------------------------------------------------------------------
-def jacobi(p_start, p_anchor):
+
+# 3 Estimation of the Position:
+def calc_jacobi(p_start, p_anchor):
     j_mat = np.zeros((4, 2))
 
     for i in range(4):
-        j_mat[i][0] = (p_anchor[i][0] - p_start[0][0]) / calc_euclid_dist(p_start[0], p_anchor[i])
-        j_mat[i][1] = (p_anchor[i][1] - p_start[0][1]) / calc_euclid_dist(p_start[0], p_anchor[i])
+        j_mat[i][0] = ((p_anchor[i][0] - p_start[0][0]) / calc_euclid_dist(p_start[0], p_anchor[i]))
+        j_mat[i][1] = ((p_anchor[i][1] - p_start[0][1]) / calc_euclid_dist(p_start[0], p_anchor[i]))
 
     return j_mat
 
+#--------------------------------------------------------------------------------
+def calc_anchor_dist(p_true, p_anchor):
+    dists = []
+    for i in range(4):
+        dists.append(calc_euclid_dist(p_true, p_anchor[i]))
+    return dists
+
+#--------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------
 def plot_gauss_contour(mu,cov,xmin,xmax,ymin,ymax,title="Title"):
     

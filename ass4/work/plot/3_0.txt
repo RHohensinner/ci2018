@@ -1,0 +1,12 @@
+Scenario 1: Gauss
+Mean:  0.277908106032 
+Variance:  0.0216354485498
+
+Scenario 2: Gauss and Exponential
+Mean:  0.640209897662 
+Variance:  0.274523312394
+
+Scenario 3: Exponential
+Mean:  1.26582228067 
+Variance:  0.944267474624
+
