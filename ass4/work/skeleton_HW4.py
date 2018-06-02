@@ -18,8 +18,8 @@ def main():
     
     # choose the scenario
 #    scenario = 1    # all anchors are Gaussian
-    scenario = 2    # 1 anchor is exponential, 3 are Gaussian
-#    scenario = 3    # all anchors are exponential
+#    scenario = 2    # 1 anchor is exponential, 3 are Gaussian
+    scenario = 3    # all anchors are exponential
     
     # specify position of anchors
     p_anchor = np.array([[5,5],[-5,5],[-5,-5],[5,-5]])
@@ -183,7 +183,7 @@ def position_estimation_least_squares(data, nr_anchors, p_anchor, p_true, use_ex
     plt.text(p_true[0, 0] + 0.2, p_true[0, 1] + 0.2, r'$p_{true}$')
     plt.xlabel("x/m")
     plt.ylabel("y/m")
-    plt.scatter(x_est, y_est)
+    plt.scatter(x_est, y_est, 0.5)
 
     # setting up vars for plotGaussianContour
     min_x = min(x_est)
