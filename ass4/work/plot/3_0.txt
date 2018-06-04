@@ -11,6 +11,7 @@ Mean:  1.26582228067
 Variance:  0.944267474624
 
 Scenario 2: Without Exp
-Mean:  0.398761424922 
-Variance:  0.0541068802237
+Mean:  0.398760784943 
+Variance:  0.0541071241694
+
 
