@@ -17,9 +17,9 @@ from scipy.stats import multivariate_normal
 def main():
     
     # choose the scenario
-#    scenario = 1    # all anchors are Gaussian
+    scenario = 1    # all anchors are Gaussian
 #    scenario = 2    # 1 anchor is exponential, 3 are Gaussian
-    scenario = 3    # all anchors are exponential
+#    scenario = 3    # all anchors are exponential
     
     # specify position of anchors
     p_anchor = np.array([[5,5],[-5,5],[-5,-5],[5,-5]])
@@ -202,6 +202,63 @@ def position_estimation_least_squares(data, nr_anchors, p_anchor, p_true, use_ex
     plt.ylabel("P(est_errors)")
     plt.show()
 
+    # neglecting the anchor with exponentially distributed messurements
+    if(scenario == 2):
+        # TODO estimate position for  i in range(0, nr_samples)
+
+        for i in range(0, nr_samples):
+            r = data[i][1:]
+            p_start = -5.0 + 10.0 * np.random.rand(1, 2)
+            p_est[i] = least_squares_GN_without_exp(p_anchor, p_start, r, max_iter, tol)
+
+        
+        # TODO calculate error measures and create plots
+
+        for i in range(0, nr_samples):
+            diff = np.subtract(p_est[i], p_true)[0]
+            err_measures[i] = mt.sqrt(mt.pow(diff[0], 2) + mt.pow(diff[1], 2))
+
+        # printing mean error and variance
+        print("Mean: ", np.mean(err_measures), "Variance: ", np.var(err_measures))
+
+        # split x,y estimated and calculate their mean vector and covariance matrix
+        x_est = p_est[:, 0]
+        y_est  = p_est[:, 1]
+
+        x_mean = np.mean(x_est)
+        y_mean = np.mean(y_est)
+
+        mean_vector = [x_mean, y_mean]
+
+        cov_mat = np.cov(x_est, y_est)
+
+        # Scatter plots of estimated positions:
+        plt.axis([-6, 6, -6, 6])
+        for i in range(1, 4):
+            plt.plot(p_anchor[i, 0], p_anchor[i, 1], 'bo')
+            plt.text(p_anchor[i, 0] + 0.2, p_anchor[i, 1] + 0.2, r'$p_{a,' + str(i) + '}$')
+        plt.plot(p_true[0, 0], p_true[0, 1], 'r*')
+        plt.text(p_true[0, 0] + 0.2, p_true[0, 1] + 0.2, r'$p_{true}$')
+        plt.xlabel("x/m")
+        plt.ylabel("y/m")
+        plt.scatter(x_est, y_est, 0.5)
+
+        # setting up vars for plotGaussianContour
+        min_x = min(x_est)
+        max_x = max(x_est)
+        min_y = min(y_est)
+        max_y = max(y_est)
+
+        # plotting gaussian contour
+        plot_gauss_contour(mean_vector, cov_mat, min_x, max_x, min_y, max_y, "Scenario 2: Without Exponential")
+
+        # cumulative distribution function
+        Fx, x = ecdf(err_measures)
+        plt.plot(x, Fx)
+        plt.title("CDF - Scenario " + str(scenario) + " (Without Exponential)")
+        plt.xlabel("position of est_errors")
+        plt.ylabel("P(est_errors)")
+        plt.show()
 #--------------------------------------------------------------------------------
 def position_estimation_numerical_ml(data,nr_anchors,p_anchor, lambdas, p_true):
     """ estimate the position by using a numerical maximum likelihood estimator
@@ -262,7 +319,39 @@ def least_squares_GN(p_anchor, p_start, r, max_iter, tol):
 
     return p_temp;
 
-    
+def least_squares_GN_without_exp(p_anchor, p_start, r, max_iter, tol):
+    """ apply Gauss Newton to find the least squares solution
+    Input:
+        p_anchor... position of anchors, nr_anchors x 2
+        p_start... initial position, 2x1
+        r... distance_estimate, nr_anchors x 1
+        max_iter... maximum number of iterations, scalar
+        tol... tolerance value to terminate, scalar"""
+        # helper vars:    
+    p_temp = p_start
+    p_old = 0
+    brk_cond = 0
+    diff = 0
+
+
+    for i in range(max_iter):
+        # creating jacobi matrix
+        j_mat = calc_jacobi_without_exp(p_temp, p_anchor)
+
+        #updating p_old and calc new temp
+        p_old = p_temp
+        anchor_dists = calc_anchor_dist_without_exp(p_temp[0], p_anchor)
+        p_temp = np.subtract(p_temp, np.dot(np.dot(np.linalg.inv(np.dot(j_mat.T, j_mat)), j_mat.T), np.subtract(r, anchor_dists)))
+        
+        # calc diff and break condition
+        diff = np.subtract(p_temp, p_old)[0]
+        brk_cond = mt.sqrt(mt.pow(diff[0], 2) + mt.pow(diff[1], 2))
+
+        # if brk_cond is smaller than tol break and return p_temp
+        if (brk_cond < tol):
+            break;
+
+    return p_temp;
 #--------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------
 # Helper Functions
@@ -324,11 +413,29 @@ def calc_jacobi(p_start, p_anchor):
     return j_mat
 
 #--------------------------------------------------------------------------------
+
+def calc_jacobi_without_exp(p_start, p_anchor):
+    j_mat = np.zeros((3, 2))
+
+    for i in range(0, 3):
+        j_mat[i][0] = ((p_anchor[i+1][0] - p_start[0][0]) / calc_euclid_dist(p_start[0], p_anchor[i+1]))
+        j_mat[i][1] = ((p_anchor[i+1][1] - p_start[0][1]) / calc_euclid_dist(p_start[0], p_anchor[i+1]))
+
+    return j_mat    
+
+#--------------------------------------------------------------------------------
 def calc_anchor_dist(p_true, p_anchor):
     dists = []
     for i in range(4):
         dists.append(calc_euclid_dist(p_true, p_anchor[i]))
     return dists
+
+#--------------------------------------------------------------------------------
+def calc_anchor_dist_without_exp(p_true, p_anchor):
+    dists = []
+    for i in range(1, 4):
+        dists.append(calc_euclid_dist(p_true, p_anchor[i]))
+    return dists    
 
 #--------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------
