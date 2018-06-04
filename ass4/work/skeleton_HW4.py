@@ -58,7 +58,7 @@ def main():
         # TODO
         nml = position_estimation_numerical_ml(data, nr_anchors, p_anchor, params, p_true)
 
-        plt.contour(np.linspace(-5, 5, 201), np.linspace(-5, 5, 201), nml, 10)
+        plt.contour(np.linspace(-5, 5, 201), np.linspace(-5, 5, 201), nml)
         plt.colorbar()
         plt.show()
     
