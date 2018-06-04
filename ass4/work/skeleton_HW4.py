@@ -3,6 +3,7 @@
 #Edited: May, 2018
 
 import numpy as np
+
 import matplotlib.cm as cm
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
@@ -10,6 +11,7 @@ import scipy.stats as stats
 
 import math as mt
 
+from mpl_toolkits.mplot3d import Axes3D
 from scipy.stats import multivariate_normal
 
 #--------------------------------------------------------------------------------
@@ -17,9 +19,9 @@ from scipy.stats import multivariate_normal
 def main():
     
     # choose the scenario
-    scenario = 1    # all anchors are Gaussian
+#    scenario = 1    # all anchors are Gaussian
 #    scenario = 2    # 1 anchor is exponential, 3 are Gaussian
-#    scenario = 3    # all anchors are exponential
+    scenario = 3    # all anchors are exponential
     
     # specify position of anchors
     p_anchor = np.array([[5,5],[-5,5],[-5,-5],[5,-5]])
@@ -54,7 +56,11 @@ def main():
 
         #3) Postion estimation using numerical maximum likelihood
         # TODO
-        position_estimation_numerical_ml(data, nr_anchors, p_anchor, params, p_true)
+        nml = position_estimation_numerical_ml(data, nr_anchors, p_anchor, params, p_true)
+
+        plt.contour(np.linspace(-5, 5, 201), np.linspace(-5, 5, 201), nml, 10)
+        plt.colorbar()
+        plt.show()
     
         #4) Position estimation with prior knowledge (we roughly know where to expect the agent)
         # TODO
@@ -67,7 +73,7 @@ def main():
 
 #--------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------
-def parameter_estimation(reference_measurement, nr_anchors, p_anchor, p_ref, p_true,data, scenario):
+def parameter_estimation(reference_measurement, nr_anchors, p_anchor, p_ref, p_true, data, scenario):
     """ estimate the model parameters for all 4 anchors based on the reference measurements, i.e., for anchor i consider reference_measurement[:,i]
     Input:
         reference_measurement... nr_measurements x nr_anchors
@@ -151,7 +157,8 @@ def position_estimation_least_squares(data, nr_anchors, p_anchor, p_true, use_ex
 
     for i in range(0, nr_samples):
         r = data[i]
-        p_start = -5.0 + 10.0 * np.random.rand(1, 2)
+        rnd = np.random.rand(1, 2)
+        p_start = 10.0 * rnd - 5.0
         p_est[i] = least_squares_GN(p_anchor, p_start, r, max_iter, tol)
 
 	# TODO calculate error measures and create plots
@@ -208,7 +215,8 @@ def position_estimation_least_squares(data, nr_anchors, p_anchor, p_true, use_ex
 
         for i in range(0, nr_samples):
             r = data[i][1:]
-            p_start = -5.0 + 10.0 * np.random.rand(1, 2)
+            rnd = np.random.rand(1, 2)
+            p_start = 10.0 * rnd - 5.0
             p_est[i] = least_squares_GN_without_exp(p_anchor, p_start, r, max_iter, tol)
 
         
@@ -260,7 +268,7 @@ def position_estimation_least_squares(data, nr_anchors, p_anchor, p_true, use_ex
         plt.ylabel("P(est_errors)")
         plt.show()
 #--------------------------------------------------------------------------------
-def position_estimation_numerical_ml(data,nr_anchors,p_anchor, lambdas, p_true):
+def position_estimation_numerical_ml(data, nr_anchors, p_anchor, lambdas, p_true):
     """ estimate the position by using a numerical maximum likelihood estimator
     Input:
         data...distance measurements to unkown agent, nr_measurements x nr_anchors
@@ -268,8 +276,24 @@ def position_estimation_numerical_ml(data,nr_anchors,p_anchor, lambdas, p_true):
         p_anchor... position of anchors, nr_anchors x 2 
         lambdas... estimated parameters (scenario 3), nr_anchors x 1
         p_true... true position (needed to calculate error), 2x2 """
-    #TODO
-    pass
+        
+        # 201 as discussed in newsgroup
+    nml = []
+
+    for x in np.linspace(-5.0, 5.0, 201):
+        for y in np.linspace(-5.0, 5.0, 201):
+            lh = 1
+            point = np.array([[y,x]])
+            for i in range(0, nr_anchors):
+                distance = calc_euclid_dist(point[0], p_anchor[i])
+                if(distance <= data[0, i]):
+                    lh = lh * (lambdas[0, i] * np.exp(-lambdas[0, i] * (data[0, i] - distance)))
+            nml.append(lh)        
+
+    nml = np.reshape(nml, (201, 201))
+    return nml
+ 
+
 #--------------------------------------------------------------------------------
 def position_estimation_bayes(data,nr_anchors,p_anchor,prior_mean,prior_cov,lambdas, p_true):
     """ estimate the position by accounting for prior knowledge that is specified by a bivariate Gaussian
