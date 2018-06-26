@@ -21,33 +21,61 @@ def main():
     ## (a) load the modified iris data
     data, labels = load_iris_data()
     
-    ## (b) construct the datasets 
+    ## (b) construct the datasets
+    #scenario 1
     x_2dim = data[:, [0,2]]
+    #scenario 2
     x_4dim = data
-    #TODO: implement PCA
-    x_2dim_pca = PCA(data,nr_dimensions=2,whitening=False)
+    #scenario 3
+    x_2dim_pca = PCA(data, 2, False)
     
     ## (c) visually inspect the data with the provided function (see example below)
-    plot_iris_data(x_2dim,labels)
+    plot_iris_data(x_2dim, labels)
 
     #------------------------
+    # SCENARIO 1:
     # 1) Consider a 2-dim slice of the data and evaluate the EM- and the KMeans- Algorithm   
     scenario = 1
     dim = 2
     nr_components = 3
     
     #TODO set parameters
-    #tol = ...  # tolerance
-    #max_iter = ...  # maximum iterations for GN
-    #nr_components = ... #n number of components
+    tol = 0.001  # tolerance
+    max_iter = 60  # maximum iterations for GN
     
     #TODO: implement
     #(alpha_0, mean_0, cov_0) = init_EM(dimension = dim, nr_components= nr_components, scenario=scenario)
     #... = EM(x_2dim,nr_components, alpha_0, mean_0, cov_0, max_iter, tol)    
     #initial_centers = init_k_means(dimension = dim, nr_clusters=nr_components, scenario=scenario)
     #... = k_means(x_2dim, nr_components, initial_centers, max_iter, tol)
+
+    alpha_0, mean_0, cov_0 = init_EM(dim, nr_components, scenario, x_2dim)
+    alpha, mean, cov, likelihood, label_names = EM(x_2dim, nr_components, alpha_0, mean_0, cov_0, max_iter, tol)  
+
+    plt.plot(likelihood)
+    plt.title("Loglikelihood over iterations (Scenario 1)")
+    plt.xlabel("iteration")
+    plt.ylabel("loglikelihood")
+    plt.show()
+    plotEM(mean, x_2dim, label_names, scenario)
+    for i in range(0, len(mean[0])):
+        plot_gauss_contour(mean[:, i], cov[i], np.min(x_2dim[label_names == i, 0]), np.max(x_2dim[label_names == i, 0]), np.min(x_2dim[label_names == i, 1]),
+                           np.max(x_2dim[label_names == i, 1]), len(x_2dim[label_names == i]), "<3")
+    plt.title("EM classification (Scenario 1)")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.show()
+
+    initial_centers = init_k_means(dimension = dim, nr_clusters=nr_components, scenario=scenario)
+    centers, cumulative_distance, labels = k_means(x_2dim, nr_components, initial_centers, max_iter, tol)
     
     #TODO visualize your results
+    plotKmeans(centers, x_2dim, labels, "K-means result (Scenario 1)", scenario)
+    plt.plot(cumulative_distance)
+    plt.title("Cumulative distance (Scenario 1)")
+    plt.xlabel("iteration")
+    plt.ylabel("cumulative distance")
+    plt.show()
 
 
     #------------------------
@@ -66,6 +94,13 @@ def main():
     #... = EM(x_2dim, nr_components, alpha_0, mean_0, cov_0, max_iter, tol) 
     #initial_centers = init_k_means(dimension = dim, nr_cluster=nr_components, scenario=scenario)
     #... = k_means(x_2dim,nr_components, initial_centers, max_iter, tol)
+
+    alpha_0, mean_0, cov_0 = init_EM(dim, nr_components, scenario, x_4dim)
+    alpha, mean, cov, likelihood, label_names = EM(x_4dim, nr_components, alpha_0, mean_0, cov_0, max_iter, tol)  
+
+    initial_centers = init_k_means(dimension = dim, nr_clusters=nr_components, scenario=scenario)
+    centers, cumulative_distance, labels = k_means(x_4dim, nr_components, initial_centers, max_iter, tol)
+    
     
     #TODO: visualize your results by looking at the same slice as in 1)
     
@@ -91,12 +126,13 @@ def main():
     #TODO: visualize your results
     #TODO: compare PCA as pre-processing (3.) to PCA as post-processing (after 2.)
     
+    exit()
     pdb.set_trace()
     pass
 
 #--------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------
-def init_EM(dimension=2,nr_components=3, scenario=None):
+def init_EM(dimension = 2, nr_components = 3, scenario = None, data = None):
     """ initializes the EM algorithm
     Input: 
         dimension... dimension D of the dataset, scalar
@@ -106,10 +142,106 @@ def init_EM(dimension=2,nr_components=3, scenario=None):
         alpha_0... initial weight of each component, 1 x nr_components
         mean_0 ... initial mean values, D x nr_components
         cov_0 ...  initial covariance for each component, D x D x nr_components"""
+
     # TODO choose suitable initial values for each scenario
-    pass
+
+    # 1st) INIT:
+
+    nr = 0
+    dim = 0
+    n_count = data.shape[0]
+
+    # setting alpha_0 (see script page 18)
+    alpha_0 = np.ones(nr_components)
+    mean_0 = np.zeros((dimension, nr_components))
+    cov_0 = np.zeros((nr_components, dimension, dimension))
+
+    alpha_0 = alpha_0 * (1.0 / float(nr_components))
+    #print(alpha_0)
+
+    # setting mean_0 (see script page 19)
+    for nr in range(nr_components):
+        for dim in range(dimension):
+            r = np.random.randint(0, n_count)
+            mean_0[dim][nr] = data[r][0]
+    #print(mean_0)
+
+
+    # setting cov_0 (see script page 19)
+    counter = 0
+    temp_mean = (1.0 / n_count * sum(data))
+    diff = (data - temp_mean)
+    # idea from: 
+    # https://stackoverflow.com/a/33641428
+    diff_transpose = np.transpose(diff)
+    # attention, dimensions are reversed!
+    temp_cov = (1.0 / n_count * np.matmul(diff_transpose, diff))
+
+    for counter in range(nr_components):
+        cov_0[counter] = temp_cov
+    #print(cov_0)
+
+    return alpha_0, mean_0, cov_0
+
+    """
+    #print(dimension, nr_components, scenario)
+    counter = 0
+
+    n_count = data.shape[0]
+
+    
+    # attention, dimensions are reversed!
+    alpha_0 = np.ones(nr_components)
+    mean_0 = np.zeros((nr_components, dimension))
+    cov_0 = np.zeros((nr_components, dimension, dimension))
+
+
+	# setting alpha_0 (see script page 18)
+    alpha_0 = alpha_0 * (1.0 / nr_components)
+
+    # setting mean_0 (see script page 19)
+    for counter in range(nr_components):
+        r = np.random.randint(0, n_count)
+        mean_0[counter] = data[r]
+
+    # setting cov_0 (see script page 19)
+    counter = 0
+    temp_mean = (1.0 / n_count * sum(data))
+    diff = (data - temp_mean)
+    # idea from: 
+    # https://stackoverflow.com/a/33641428
+    diff_transpose = np.transpose(diff)
+    # attention, dimensions are reversed!
+    temp_cov = (1.0 / n_count * np.matmul(diff_transpose, diff))
+
+    for counter in range(nr_components):
+    	cov_0[counter] = temp_cov
+
+
+    return alpha_0, mean_0, cov_0
+
+    
+    M = nr_components
+
+    alpha_0 = []
+    for i in range(M):
+        alpha_0.append(1/M)
+    return alpha_0
+    
+    cov_0 = []
+    x = X[:,0]
+    y = X[:,1]
+    for i in range(M):
+        cov_0.append(np.cov(x, y))
+
+    mean_0 = X[rd.randint(0, np.size(X, 0), size = M)]
+
+    return alpha_0, mean_0, cov_0    
+
+    """
+
 #--------------------------------------------------------------------------------
-def EM(X,K,alpha_0,mean_0,cov_0, max_iter, tol):
+def EM(X, K, alpha_0, mean_0, cov_0, max_iter, tol):
     """ perform the EM-algorithm in order to optimize the parameters of a GMM
     with K components
     Input:
@@ -125,12 +257,109 @@ def EM(X,K,alpha_0,mean_0,cov_0, max_iter, tol):
         log_likelihood... log-likelihood over all iterations, nr_iterations x 1
         labels... class labels after performing soft classification, nr_samples x 1"""
     # compute the dimension 
+    #print(X.shape[1], mean_0.shape[1])
     D = X.shape[1]
     assert D == mean_0.shape[0]
+
     #TODO: iteratively compute the posterior and update the parameters
-    
     #TODO: classify all samples after convergence
-    pass
+
+    alpha = alpha_0
+    mean = mean_0
+    cov = cov_0
+
+    N = X.shape[0] 
+
+    r_n_k = np.zeros((K, N))
+
+    log_lhs = []
+    log_lh = 0
+
+
+    for iteration in range(max_iter):
+
+        # --------------------------------------------------------------------------------
+        # 2nd) Expectation Step:
+        # --------------------------------------------------------------------------------
+
+        for n in range(N):
+            lh_sum = 0
+            for j in range(K):
+                lh_sum += alpha[j] * likelihood_multivariate_normal(X[n], mean[:, j], cov[j])  
+            for k in range(K):
+
+                lh = likelihood_multivariate_normal(X[n], mean[:, k], cov[k])
+                lh_numerator = alpha[k] * lh
+                lh_denominator = lh_sum
+
+                r_n_k[k][n] = (lh_numerator / lh_denominator)
+                
+        # --------------------------------------------------------------------------------
+        # 3rd) Maximization Step:
+        # --------------------------------------------------------------------------------        
+        
+        cov = np.zeros(cov.shape)
+        mean = np.zeros(mean.shape)
+
+        for k in range(K):
+            # equals Nm in script
+            N_k = np.sum(r_n_k[k])
+            part_sum = 0
+            for n in range(N):
+                part_sum += r_n_k[k][n] * X[n]
+            mean[:, k] = part_sum / N_k
+
+            part_sum = 0 
+            for n in range(N):
+                diff = X[n] - mean[:,k]
+                part_sum += r_n_k[k][n] * np.dot((diff)[:, None], (diff)[None, :])
+
+            cov[k] = part_sum / N_k
+
+            alpha[k] = N_k / N
+
+        # --------------------------------------------------------------------------------
+        # 4th) Likelihood Calculation:
+        # --------------------------------------------------------------------------------
+
+        curr_lh = 0
+        for n in range(N):
+            curr_lh_k = 0
+            for k in range(K):
+                curr_lh_k += alpha[k] * likelihood_multivariate_normal(X[n], mean[:, k], cov[k], True) 
+            curr_lh += np.log(np.abs(curr_lh_k))
+
+        log_lhs.append(curr_lh)
+        
+        abs_var = np.abs(curr_lh - log_lh)
+        log_lh = curr_lh
+
+        if abs_var < tol:
+            break
+
+    label_names = np.zeros((N,))
+    for n in range(N):
+        label_names[n] = np.argmax(r_n_k[:, n])
+
+
+    return alpha, mean, cov, log_lhs, label_names 
+
+
+def plotEM(means, data, labels, scenario):
+
+    if scenario == 1 or scenario == 3:
+        for i in range(0, len(means[0])):
+            plt.scatter(data[labels == i, 0], data[labels == i, 1], label='class ' + str(i))
+        plt.scatter(means[0], means[1], label='Means')
+
+    if scenario == 2:
+        for i in range(0, len(means[0])):
+            plt.scatter(data[labels == i, 0], data[labels == i, 2], label='class ' + str(i))
+        plt.scatter(means[0], means[2], label='Means')
+
+    plt.legend()
+    plt.show()
+
 #--------------------------------------------------------------------------------
 def init_k_means(dimension=None, nr_clusters=None, scenario=None):
     """ initializes the k_means algorithm
@@ -141,9 +370,16 @@ def init_k_means(dimension=None, nr_clusters=None, scenario=None):
     Returns:
         initial_centers... initial cluster centers,  D x nr_clusters"""
     # TODO chosse suitable inital values for each scenario
-    pass
+
+    init_array = np.zeros((dimension, nr_clusters))
+    for d in range(dimension):
+        for n in range(nr_clusters):
+            init_array[d][n] = np.random.randint(3, 8)
+
+    print(init_array)
+    return init_array
 #--------------------------------------------------------------------------------
-def k_means(X,K, centers_0, max_iter, tol):
+def k_means(X, K, centers_0, max_iter, tol):
     """ perform the KMeans-algorithm in order to cluster the data into K clusters
     Input:
         X... samples, nr_samples x dimension (D)
@@ -155,12 +391,84 @@ def k_means(X,K, centers_0, max_iter, tol):
         labels... class labels after performing hard classification, nr_samples x 1"""
     D = X.shape[1]
     assert D == centers_0.shape[0]
-    #TODO: iteratively update the cluster centers
-    
-    #TODO: classify all samples after convergence
-    pass
+    # TODO: iteratively update the cluster centers
+    N = X.shape[0]    
+
+    centers = centers_new = centers_0    
+    cumulative_distance = []
+    labels = np.zeros((N,))
+
+    cumulative_distance_previous = 0
+
+    Y = [[0] for k in range(K)]
+
+    m = 0;
+
+    while(1):
+        cumulative_distance_part = np.zeros((K,))
+        cumulative_distance_current = 0
+        
+        for n in range(N):
+            k_distance = np.zeros((K,))
+
+            for k in range(0, K):
+                diff = (X[n] - centers[:, k])
+                k_distance[k] = np.dot(diff.T, diff)
+
+            k_argmin = np.argmin(k_distance)
+
+            labels[n] = k_argmin
+
+            Y[k_argmin].append(X[n])
+            
+            cumulative_distance_part[k_argmin] += k_distance[k_argmin]
+
+        
+        cumulative_distance_current = sum(cumulative_distance_part)
+
+        cumulative_distance.append(cumulative_distance_current)
+
+        cond_distance = cumulative_distance_previous - cumulative_distance_current
+
+        m += 1
+        if np.abs(cond_distance) < tol or m == max_iter:
+            break
+
+        centers_new = np.zeros(centers.shape)
+        for k in range(K):
+            actual_member = len(Y[k])
+            actual_sum = sum(Y[k])
+            if actual_member == 0:
+                for d in range(dimension):
+                    centers_new[d][k] = np.random.randint(3, 8)
+            else:
+                centers_new[:, k] = actual_sum / actual_member
+
+        centers = centers_new
+
+        cumulative_distance_previous = cumulative_distance_current
+
+    return centers, cumulative_distance, labels
+
+def plotKmeans(centers, data, labels, title, scenario):
+    if scenario == 1 or scenario == 3:
+        for i in range(0, len(centers[0])):
+            plt.scatter(data[labels == i, 0], data[labels == i, 1], label='class ' + str(i))
+        plt.scatter(centers[0], centers[1], label='Means')
+
+    if scenario == 2:
+        for i in range(0, len(centers[0])):
+            plt.scatter(data[labels == i, 0], data[labels == i, 2], label='class ' + str(i))
+        plt.scatter(centers[0], centers[2], label='Means')
+
+    plt.legend()
+    plt.title(title)
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.show()
+
 #--------------------------------------------------------------------------------
-def PCA(data,nr_dimensions=None, whitening=False):
+def PCA(data, nr_dimensions = None, whitening=False):
     """ perform PCA and reduce the dimension of the data (D) to nr_dimensions
     Input:
         data... samples, nr_samples x D
@@ -217,7 +525,7 @@ def likelihood_multivariate_normal(X, mean, cov, log=False):
    cov ... covariance matrix -- np.array with (d x d)
    log ... False for likelihood, true for log-likelihood
    """
-   
+
    dist = multivariate_normal(mean, cov)
    if log is False:
        P = dist.pdf(X)
@@ -226,7 +534,7 @@ def likelihood_multivariate_normal(X, mean, cov, log=False):
    return P 
 
 #--------------------------------------------------------------------------------
-def plot_gauss_contour(mu,cov,xmin,xmax,ymin,ymax,nr_points,title="Title"):   
+def plot_gauss_contour(mu, cov, xmin, xmax, ymin, ymax, nr_points, title="Title"):
     """ creates a contour plot for a bivariate gaussian distribution with specified parameters
     
     Input:
@@ -236,16 +544,16 @@ def plot_gauss_contour(mu,cov,xmin,xmax,ymin,ymax,nr_points,title="Title"):
       ymin,ymax....minimum and maximum value for height of plot-area, scalar
       nr_points...specifies the resolution along both axis
       title... title of the plot (optional), string"""
-    
-	#npts = 100
-    delta_x = float(xmax-xmin) / float(nr_points)
-    delta_y = float(ymax-ymin) / float(nr_points)
+
+    # npts = 100
+    delta_x = float(xmax - xmin) / float(nr_points)
+    delta_y = float(ymax - ymin) / float(nr_points)
     x = np.arange(xmin, xmax, delta_x)
     y = np.arange(ymin, ymax, delta_y)
-    
+
     X, Y = np.meshgrid(x, y)
-    Z = mlab.bivariate_normal(X,Y,np.sqrt(cov[0][0]),np.sqrt(cov[1][1]),mu[0], mu[1], cov[0][1])
-    plt.plot([mu[0]],[mu[1]],'r+') # plot the mean as a single point
+    Z = mlab.bivariate_normal(X, Y, np.sqrt(cov[0][0]), np.sqrt(cov[1][1]), mu[0], mu[1], cov[0][1])
+    plt.plot([mu[0]], [mu[1]], 'r+')  # plot the mean as a single point
     CS = plt.contour(X, Y, Z)
     plt.clabel(CS, inline=1, fontsize=10)
     plt.title(title)
@@ -322,7 +630,7 @@ def sanity_checks():
        0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0,
        0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0])
     new_labels = reassign_class_labels(class_labels_unordererd)
-    reshuffled_labels =np.zeros_like(class_labels_unordererd)
+    reshuffled_labels = np.zeros_like(class_labels_unordererd)
     reshuffled_labels[class_labels_unordererd==0] = new_labels[0]
     reshuffled_labels[class_labels_unordererd==1] = new_labels[1]
     reshuffled_labels[class_labels_unordererd==2] = new_labels[2]
